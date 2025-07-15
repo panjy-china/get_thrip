@@ -1,0 +1,32 @@
+CHEBI:15377	water
+CHEBI:17234	glucose
+CHEBI:16015	fructose
+CHEBI:17992	sucrose
+CHEBI:16449	lactose
+CHEBI:28304	vitamin c
+CHEBI:15956	vitamin a
+CHEBI:33229	vitamin d
+CHEBI:18067	vitamin e
+CHEBI:28384	vitamin k
+CHEBI:16134	amino acid
+CHEBI:15428	glycine
+CHEBI:16449	alanine
+CHEBI:17196	leucine
+CHEBI:16811	methionine
+CHEBI:18186	cholesterol
+CHEBI:16113	choline
+CHEBI:15843	starch
+CHEBI:16646	cellulose
+CHEBI:28868	caffeine
+CHEBI:16015	fiber
+CHEBI:17234	protein
+CHEBI:18059	fatty acid
+CHEBI:16015	calcium
+CHEBI:18248	iron
+CHEBI:27363	zinc
+CHEBI:26708	sodium
+CHEBI:26216	potassium
+CHEBI:25107	magnesium
+CHEBI:18367	phosphorus
+CHEBI:16015	carbohydrate
+
