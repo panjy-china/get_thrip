@@ -12,6 +12,9 @@ FOODON_DATA_PATH = 'data/foodon_data_english.txt'
 CHEBI_DATA_PATH = 'data/chebi_data_english.txt'
 TEST_TEXT_PATH = 'data/test_text_english.txt'
 RESULT_OUTPUT_PATH = 'output/english_result.json'
+INDEX_PATH = "db/aiss_index.index"
+ENTITIES_PATH = "db/entities.pkl"
+METADATA_PATH = "db/metadata.json"
 
 # Model settings
 SIMILARITY_THRESHOLD = 0.5

@@ -4,12 +4,15 @@
 """
 English Version Vector Storage and Retrieval System
 """
+import json
+import os
+import pickle
 
 import numpy as np
 import faiss
 from sentence_transformers import SentenceTransformer
 from config_english import (
-    FOODON_DATA_PATH, CHEBI_DATA_PATH, SEMANTIC_MODEL_NAME, TOP_K_ENTITIES
+    FOODON_DATA_PATH, CHEBI_DATA_PATH, SEMANTIC_MODEL_NAME, TOP_K_ENTITIES, INDEX_PATH, ENTITIES_PATH, METADATA_PATH
 )
 
 def load_foodon_data_english():
@@ -40,46 +43,122 @@ def load_chebi_data_english():
                 compounds.append({'id': compound_id, 'name': name.lower(), 'type': 'compound'})
     return compounds
 
-def create_vector_database_english():
+# def create_vector_database_english():
+#     """
+#     Create English vector database
+#     """
+#     print("Initializing English vector database...")
+#
+#     # Load data
+#     print("Loading foodon data...")
+#     foods = load_foodon_data_english()
+#
+#     print("Loading chebi data...")
+#     compounds = load_chebi_data_english()
+#
+#     # Combine all entities
+#     all_entities = foods + compounds
+#
+#     # Extract texts
+#     texts = [entity['name'] for entity in all_entities]
+#
+#     print(f"Vectorizing {len(texts)} entries...")
+#
+#     # Create vectors using English-optimized model
+#     model = SentenceTransformer(SEMANTIC_MODEL_NAME)
+#     embeddings = model.encode(texts)
+#
+#     # Create FAISS index
+#     dimension = embeddings.shape[1]
+#     index = faiss.IndexFlatIP(dimension)  # Inner product similarity
+#
+#     # Normalize vectors for cosine similarity
+#     faiss.normalize_L2(embeddings)
+#     index.add(embeddings.astype('float32'))
+#
+#     print("English vector database created successfully!")
+#
+#     return {
+#         'index': index,
+#         'entities': all_entities,
+#         'model': model
+#     }
+
+def create_or_load_vector_database():
     """
-    Create English vector database
+    创建或加载轻量级向量数据库（仅保存索引和实体）
     """
-    print("Initializing English vector database...")
-    
-    # Load data
-    print("Loading foodon data...")
+    # 检查是否已有保存文件
+    if all(os.path.exists(p) for p in [INDEX_PATH, ENTITIES_PATH, METADATA_PATH]):
+        print("Loading existing database...")
+        return load_database()
+
+    print("Creating new database...")
+    # 加载数据
     foods = load_foodon_data_english()
-    
-    print("Loading chebi data...")
     compounds = load_chebi_data_english()
-    
-    # Combine all entities
     all_entities = foods + compounds
-    
-    # Extract texts
     texts = [entity['name'] for entity in all_entities]
-    
-    print(f"Vectorizing {len(texts)} entries...")
-    
-    # Create vectors using English-optimized model
+
+    # 创建向量
     model = SentenceTransformer(SEMANTIC_MODEL_NAME)
     embeddings = model.encode(texts)
-    
-    # Create FAISS index
+
+    # 创建索引
     dimension = embeddings.shape[1]
-    index = faiss.IndexFlatIP(dimension)  # Inner product similarity
-    
-    # Normalize vectors for cosine similarity
+    index = faiss.IndexFlatIP(dimension)
     faiss.normalize_L2(embeddings)
     index.add(embeddings.astype('float32'))
-    
-    print("English vector database created successfully!")
-    
+
+    # 保存数据
+    faiss.write_index(index, INDEX_PATH)
+    with open(ENTITIES_PATH, 'wb') as f:
+        pickle.dump(all_entities, f)
+
+    # 保存元信息
+    metadata = {
+        'model_name': SEMANTIC_MODEL_NAME,
+        'embedding_dim': dimension,
+        'entity_count': len(all_entities)
+    }
+    with open(METADATA_PATH, 'w') as f:
+        json.dump(metadata, f)
+
+    print("Database created and saved successfully!")
+    return {
+        'index': index,
+        'entities': all_entities,
+        'model': model  # 仅内存中保留，不持久化
+    }
+
+
+def load_database():
+    """
+    加载已保存的数据库（无需模型文件）
+    """
+    # 加载索引和实体
+    index = faiss.read_index(INDEX_PATH)
+    with open(ENTITIES_PATH, 'rb') as f:
+        all_entities = pickle.load(f)
+
+    # 加载元信息
+    with open(METADATA_PATH, 'r') as f:
+        metadata = json.load(f)
+
+    # 动态加载模型（需确保环境已安装该模型）
+    model = SentenceTransformer(metadata['model_name'])
+
+    # 验证维度一致性
+    assert metadata['embedding_dim'] == model.get_sentence_embedding_dimension(), \
+        "模型版本不匹配！"
+
+    print("Database loaded successfully!")
     return {
         'index': index,
         'entities': all_entities,
         'model': model
     }
+
 
 def search_relevant_entities_english(db, query_text, top_k=None):
     """
@@ -121,7 +200,7 @@ if __name__ == "__main__":
     from config_english import validate_config
     
     if validate_config():
-        db = create_vector_database_english()
+        db = create_or_load_vector_database()
         
         test_query = "potatoes contain starch"
         foods, compounds = search_relevant_entities_english(db, test_query, top_k=5)

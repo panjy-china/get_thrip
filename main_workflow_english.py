@@ -11,7 +11,7 @@ import re
 import nltk
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
-from vector_system_english import create_vector_database_english, search_relevant_entities_english
+from vector_system_english import search_relevant_entities_english, create_or_load_vector_database
 from config_english import (
     TEST_TEXT_PATH, RESULT_OUTPUT_PATH, SIMILARITY_THRESHOLD, 
     TOP_K_ENTITIES, SEMANTIC_MODEL_NAME, ENGLISH_FOOD_INDICATORS,
@@ -289,7 +289,7 @@ def run_english_workflow():
     
     # Step 2: Create vector database
     print("2. Initializing vector database...")
-    db = create_vector_database_english()
+    db = create_or_load_vector_database()
     print("✅ Vector database created successfully\n")
     
     # Step 3: Read test text
